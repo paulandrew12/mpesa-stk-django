@@ -1,0 +1,250 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M-Pesa STK Push — Reconciliation Demo</title>
+<style>
+:root{--bg:#f7f8fa;--surface:#fff;--surface-2:#f1f3f6;--border:#e2e6ec;--text:#14171c;--text-dim:#5b6472;--text-faint:#8b95a3;--accent:#0f9d58;--accent-dim:#e6f5ed;--warn:#b7791f;--warn-dim:#fdf3e0;--danger:#c5352b;--danger-dim:#fceceb;--radius:10px;--shadow:0 1px 2px rgba(16,22,30,.05),0 4px 16px rgba(16,22,30,.05)}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1015;--surface:#151a21;--surface-2:#1c222b;--border:#262e3a;--text:#e8ecf1;--text-dim:#9aa5b4;--text-faint:#6b7686;--accent:#35c77b;--accent-dim:#12301f;--warn:#e0a33c;--warn-dim:#33270f;--danger:#f0685c;--danger-dim:#351a18;--shadow:0 1px 2px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.3)}}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.shell{max-width:1080px;margin:0 auto;padding:48px 24px 80px}
+.masthead{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:8px}
+.masthead h1{font-size:26px;letter-spacing:-.5px;margin:0 0 6px}
+.masthead p{margin:0;color:var(--text-dim);max-width:60ch}
+.env-pill{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--surface-2);border:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text-dim);white-space:nowrap}
+.env-pill::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.columns{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:24px;margin-top:32px;align-items:start}
+@media(max-width:860px){.columns{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px}
+.card h2{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-faint);margin:0 0 16px;font-weight:700}
+.field{margin-bottom:15px}
+.field label{display:block;font-size:12.5px;font-weight:600;color:var(--text-dim);margin-bottom:5px}
+.field input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);font-size:15px;font-family:inherit}
+.field input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.field .hint{font-size:11.5px;color:var(--text-faint);margin-top:4px}
+button{font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border-radius:7px}
+button:disabled{opacity:.55;cursor:not-allowed}
+.btn-primary{width:100%;padding:11px 16px;background:var(--accent);color:#fff;border:none;margin-top:4px}
+.btn-primary:not(:disabled):hover{opacity:.9}
+.btn-ghost{padding:5px 10px;background:transparent;border:1px solid var(--border);color:var(--text-dim);font-size:12px}
+.btn-ghost:not(:disabled):hover{background:var(--surface-2);color:var(--text)}
+.alert{padding:11px 13px;border-radius:7px;font-size:13px;margin-bottom:15px;border:1px solid transparent}
+.alert-error{background:var(--danger-dim);border-color:var(--danger);color:var(--danger)}
+.alert-info{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:24px}
+.metric{background:var(--surface);padding:15px 17px}
+.metric .label{font-size:10.5px;text-transform:uppercase;letter-spacing:.9px;color:var(--text-faint);font-weight:700;margin-bottom:5px}
+.metric .value{font-size:21px;font-weight:650;letter-spacing:-.4px;font-variant-numeric:tabular-nums}
+.metric .value.flag{color:var(--warn)}
+.metric .value.ok{color:var(--accent)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.9px;color:var(--text-faint);font-weight:700;padding:0 14px 9px 0;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:12px 14px 12px 0;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+td.amount{font-variant-numeric:tabular-nums;font-weight:600}
+td.receipt{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
+td.muted{color:var(--text-faint)}
+.badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.badge-success{background:var(--accent-dim);color:var(--accent)}
+.badge-pending{background:var(--warn-dim);color:var(--warn)}
+.badge-failed{background:var(--danger-dim);color:var(--danger)}
+.empty{text-align:center;padding:44px 20px;color:var(--text-faint);font-size:14px}
+.sim-actions{display:flex;gap:6px}
+.footnote{margin-top:32px;padding-top:20px;border-top:1px solid var(--border);font-size:12.5px;color:var(--text-faint);line-height:1.7}
+.footnote strong{color:var(--text-dim)}
+</style>
+</head>
+<body>
+{% csrf_token %}
+<div class="shell">
+  <div class="masthead">
+    <div>
+      <h1>M-Pesa Collections</h1>
+      <p>Lipa Na M-Pesa Online (STK Push) with callback handling, automatic status recovery
+         for lost callbacks, and reconciliation reporting.</p>
+    </div>
+    <span class="env-pill">{{ environment }}</span>
+  </div>
+
+  <div class="columns">
+    <div class="card">
+      <h2>Request a payment</h2>
+      <div id="alert"></div>
+      <form id="pay-form">
+        <div class="field">
+          <label for="phone">Customer phone</label>
+          <input id="phone" name="phone" placeholder="0712345678" autocomplete="tel" required>
+          <div class="hint">Accepts 07…, 2547…, or +2547…</div>
+        </div>
+        <div class="field">
+          <label for="amount">Amount (KES)</label>
+          <input id="amount" name="amount" type="number" min="1" step="1" value="1" required>
+        </div>
+        <div class="field">
+          <label for="reference">Account reference</label>
+          <input id="reference" name="reference" value="DEMO" maxlength="12" required>
+          <div class="hint">Your invoice or member number — this is what you reconcile against.</div>
+        </div>
+        <button class="btn-primary" type="submit" id="submit-btn">Send payment prompt</button>
+      </form>
+    </div>
+
+    <div>
+      <div class="metrics" id="metrics"></div>
+      <div class="card">
+        <h2>Transactions</h2>
+        <div id="txn-area"><div class="empty">Loading…</div></div>
+      </div>
+      <div class="footnote">
+        <strong>Unreconciled</strong> counts payments that settled without a receipt number —
+        the queue a finance team works through by hand every morning. Keeping it at zero is
+        the point of the integration.
+        {% if simulation_enabled %}
+        <strong>Simulation is on:</strong> the Paid/Cancelled buttons post a synthetic
+        Safaricom callback through the real handler, so the flow can be demonstrated without
+        a public tunnel.
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SIMULATION = {{ simulation_enabled|yesno:"true,false" }};
+const KES = new Intl.NumberFormat("en-KE", { maximumFractionDigits: 0 });
+const csrftoken = document.querySelector("[name=csrfmiddlewaretoken]").value;
+const watching = new Set();
+
+function badgeClass(s) {
+  if (s === "success") return "badge badge-success";
+  if (s === "pending") return "badge badge-pending";
+  return "badge badge-failed";
+}
+
+function showAlert(message, kind) {
+  document.getElementById("alert").innerHTML = message
+    ? `<div class="alert alert-${kind}">${message}</div>` : "";
+}
+
+function post(url, body) {
+  return fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-CSRFToken": csrftoken },
+    body: JSON.stringify(body),
+  });
+}
+
+function renderMetrics(s) {
+  document.getElementById("metrics").innerHTML = `
+    <div class="metric"><div class="label">Collected</div><div class="value">${KES.format(s.collected)}</div></div>
+    <div class="metric"><div class="label">Successful</div><div class="value ok">${s.successful}</div></div>
+    <div class="metric"><div class="label">Pending</div><div class="value">${s.pending}</div></div>
+    <div class="metric"><div class="label">Failed</div><div class="value">${s.failed}</div></div>
+    <div class="metric"><div class="label">Unreconciled</div>
+      <div class="value ${s.unreconciled > 0 ? "flag" : "ok"}">${s.unreconciled}</div></div>`;
+}
+
+function renderTransactions(rows) {
+  const area = document.getElementById("txn-area");
+  if (!rows.length) {
+    area.innerHTML = `<div class="empty">No transactions yet. Send a payment prompt to get started.</div>`;
+    return;
+  }
+  const simHead = SIMULATION ? "<th>Simulate</th>" : "";
+  const body = rows.map((t) => {
+    const time = new Date(t.createdAt).toLocaleTimeString("en-KE", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    const sim = !SIMULATION ? "" : t.status === "pending"
+      ? `<td><div class="sim-actions">
+           <button class="btn-ghost" data-sim="success" data-id="${t.id}">Paid</button>
+           <button class="btn-ghost" data-sim="cancelled" data-id="${t.id}">Cancelled</button>
+         </div></td>`
+      : `<td class="muted">—</td>`;
+    return `<tr>
+      <td class="muted">${time}</td>
+      <td>${t.phone}</td>
+      <td class="amount">${KES.format(t.amount)}</td>
+      <td class="muted">${t.accountReference}</td>
+      <td><span class="${badgeClass(t.status)}">${t.status}</span></td>
+      <td class="${t.mpesaReceipt ? "receipt" : "muted"}">${t.mpesaReceipt || "—"}</td>
+      ${sim}
+    </tr>`;
+  }).join("");
+
+  area.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Time</th><th>Phone</th><th>Amount</th><th>Reference</th><th>Status</th><th>Receipt</th>${simHead}</tr></thead>
+    <tbody>${body}</tbody></table></div>`;
+}
+
+async function refresh() {
+  try {
+    const res = await fetch("/api/transactions/", { headers: { Accept: "application/json" } });
+    if (!res.ok) return;
+    const data = await res.json();
+    renderMetrics(data.summary);
+    renderTransactions(data.transactions);
+  } catch (_) { /* next tick retries */ }
+}
+
+/* Chases one push until it settles. The 5s list refresh would show it eventually,
+   but a customer at a counter needs the screen to change as they enter their PIN. */
+function watch(id) {
+  if (watching.has(id)) return;
+  watching.add(id);
+  const started = Date.now();
+  const poll = setInterval(async () => {
+    if (Date.now() - started > 150000) { clearInterval(poll); watching.delete(id); refresh(); return; }
+    try {
+      const res = await fetch(`/api/stk/status/?id=${encodeURIComponent(id)}`, { headers: { Accept: "application/json" } });
+      if (!res.ok) return;
+      const { transaction: t } = await res.json();
+      if (t && t.status !== "pending") {
+        clearInterval(poll); watching.delete(id);
+        showAlert(t.status === "success"
+          ? `Payment received — receipt ${t.mpesaReceipt || "pending"}.`
+          : `Payment ${t.status}: ${t.resultDesc || "no detail returned"}.`, "info");
+        refresh();
+      }
+    } catch (_) { /* retry next tick */ }
+  }, 2500);
+}
+
+document.getElementById("pay-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById("submit-btn");
+  btn.disabled = true; btn.textContent = "Sending prompt…";
+  showAlert("", "info");
+  try {
+    const res = await post("/api/stk/push/", {
+      phone: document.getElementById("phone").value,
+      amount: Number(document.getElementById("amount").value),
+      reference: document.getElementById("reference").value,
+      description: "Demo payment",
+    });
+    const data = await res.json();
+    if (!res.ok) { showAlert(data.error || "The payment request failed.", "error"); return; }
+    showAlert(data.customerMessage || "Prompt sent. Waiting for the customer to enter their PIN.", "info");
+    await refresh();
+    watch(data.checkoutRequestId);
+  } catch (_) {
+    showAlert("Could not reach the server.", "error");
+  } finally {
+    btn.disabled = false; btn.textContent = "Send payment prompt";
+  }
+});
+
+document.getElementById("txn-area").addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-sim]");
+  if (!btn) return;
+  await post("/api/dev/simulate-callback/", { id: btn.dataset.id, outcome: btn.dataset.sim });
+  refresh();
+});
+
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>

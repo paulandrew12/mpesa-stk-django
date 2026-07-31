@@ -1,0 +1,5 @@
+# 5.2 is the floor: earlier releases don't support Python 3.13+
+Django>=5.2,<6.0
+djangorestframework>=3.15
+python-dotenv>=1.0
+requests>=2.32
