@@ -1,0 +1,33 @@
+# Render blueprint — deploys straight from this repo with no manual config.
+#
+# In the Render dashboard: New → Blueprint → pick this repository. Render reads
+# this file, builds, and gives you a public HTTPS URL.
+#
+# Free plan notes:
+#   - the instance sleeps after ~15 minutes idle, so the first request after a
+#     quiet period takes ~50 seconds to wake
+#   - the filesystem is ephemeral: SQLite resets on each restart, which for a
+#     public demo is a feature rather than a problem
+
+services:
+  - type: web
+    name: mpesa-stk-demo
+    runtime: python
+    plan: free
+    region: frankfurt
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate"
+    startCommand: "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.6"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "false"
+      # Public portfolio demo: no Daraja credentials, no real payments.
+      - key: DEMO_MODE
+        value: "true"
+      - key: ALLOW_SIMULATION
+        value: "true"
+      - key: MPESA_ENV
+        value: sandbox

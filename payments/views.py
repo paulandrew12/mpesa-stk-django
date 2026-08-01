@@ -1,6 +1,7 @@
 import logging
 import random
 import string
+import uuid
 from datetime import timedelta
 
 from django.conf import settings
@@ -44,7 +45,11 @@ def dashboard(request):
     return render(
         request,
         "payments/dashboard.html",
-        {"simulation_enabled": settings.ALLOW_SIMULATION, "environment": settings.MPESA["ENV"]},
+        {
+            "simulation_enabled": settings.ALLOW_SIMULATION,
+            "environment": settings.MPESA["ENV"],
+            "demo_mode": settings.DEMO_MODE,
+        },
     )
 
 
@@ -64,10 +69,24 @@ def stk_push(request):
 
     try:
         phone = normalize_phone(phone_raw)
-        payload = initiate_stk_push(phone, amount, reference, description)
     except DarajaError as exc:
         logger.error("stk_push %s: %s", exc.code or "ERROR", exc.message)
         return Response({"error": exc.message, "code": exc.code}, status=exc.status)
+
+    if settings.DEMO_MODE:
+        # Skip Safaricom, record the pending transaction directly. Everything after
+        # this point — callbacks, idempotency, sweeping, reconciliation — is unchanged.
+        payload = {
+            "CheckoutRequestID": f"ws_CO_DEMO{uuid.uuid4().hex[:12].upper()}",
+            "MerchantRequestID": f"demo-{uuid.uuid4().hex[:8]}",
+            "CustomerMessage": "Demo mode: no prompt was sent. Use the Paid / Cancelled buttons to complete this payment.",
+        }
+    else:
+        try:
+            payload = initiate_stk_push(phone, amount, reference, description)
+        except DarajaError as exc:
+            logger.error("stk_push %s: %s", exc.code or "ERROR", exc.message)
+            return Response({"error": exc.message, "code": exc.code}, status=exc.status)
 
     txn = Transaction.objects.create(
         checkout_request_id=payload["CheckoutRequestID"],

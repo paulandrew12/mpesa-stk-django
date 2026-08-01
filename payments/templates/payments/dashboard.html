@@ -16,6 +16,9 @@ body{background:var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,
 .masthead p{margin:0;color:var(--text-dim);max-width:60ch}
 .env-pill{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--surface-2);border:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text-dim);white-space:nowrap}
 .env-pill::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.demo-banner{margin-top:18px;padding:13px 16px;border:1px solid var(--warn);background:var(--warn-dim);color:var(--warn);border-radius:var(--radius);font-size:13px;line-height:1.6}
+.demo-banner strong{color:var(--warn)}
+.demo-banner a{color:var(--warn)}
 .columns{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:24px;margin-top:32px;align-items:start}
 @media(max-width:860px){.columns{grid-template-columns:1fr}}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px}
@@ -69,6 +72,16 @@ td.muted{color:var(--text-faint)}
     </div>
     <span class="env-pill">{{ environment }}</span>
   </div>
+
+  {% if demo_mode %}
+  <div class="demo-banner">
+    <strong>Demo mode.</strong> No real payment prompt is sent and no money moves — Safaricom
+    isn't called. Everything after that point is the production code path: send a request, then
+    use <strong>Paid</strong> or <strong>Cancelled</strong> to deliver the callback Safaricom
+    would have sent, and watch it settle and reconcile.
+    Source: <a href="https://github.com/paulandrew12/mpesa-stk-django">github.com/paulandrew12/mpesa-stk-django</a>
+  </div>
+  {% endif %}
 
   <div class="columns">
     <div class="card">

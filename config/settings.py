@@ -17,6 +17,11 @@ DEBUG = env_bool("DJANGO_DEBUG", True)
 
 ALLOWED_HOSTS = [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
 
+# Render (and most PaaS) inject the public hostname at runtime rather than build time.
+_render_host = os.getenv("RENDER_EXTERNAL_HOSTNAME", "").strip()
+if _render_host:
+    ALLOWED_HOSTS.append(_render_host)
+
 # Daraja posts the callback from Safaricom's servers, so the tunnel or production
 # host has to be trusted for CSRF as well as allowed.
 CSRF_TRUSTED_ORIGINS = []
@@ -24,6 +29,8 @@ _callback_base = os.getenv("MPESA_CALLBACK_BASE_URL", "").strip().rstrip("/")
 if _callback_base.startswith("https://"):
     CSRF_TRUSTED_ORIGINS.append(_callback_base)
     ALLOWED_HOSTS.append(_callback_base.removeprefix("https://"))
+if _render_host:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{_render_host}")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -38,6 +45,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -88,6 +96,10 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -120,3 +132,15 @@ MPESA = {
 }
 
 ALLOW_SIMULATION = env_bool("ALLOW_SIMULATION", False)
+
+# Public-portfolio mode.
+#
+# With no Daraja credentials there is nothing to demonstrate: the push fails, no
+# transaction is created, and a visitor sees an empty table and an error. DEMO_MODE
+# skips the call to Safaricom and records the pending transaction directly, so the
+# rest of the pipeline — callback handling, idempotency, timeout sweeping,
+# reconciliation — can be exercised by anyone with a browser.
+#
+# It changes nothing downstream of the push. Every other line of code runs exactly
+# as it does against the real API.
+DEMO_MODE = env_bool("DEMO_MODE", False)
