@@ -1,5 +1,13 @@
 # M-Pesa STK Push — Collections & Reconciliation (Django)
 
+### ▶ Live demo: **https://mpesa-stk-demo.onrender.com**
+
+Request a payment, then use **Paid** or **Cancelled** to deliver the callback Safaricom would
+have sent, and watch it settle and reconcile. No real money moves — see [demo mode](#demoing-without-a-tunnel).
+*(Free instance: the first request after a quiet period takes ~50s to wake.)*
+
+---
+
 A working Lipa Na M-Pesa Online integration: send a payment prompt to a customer's phone,
 handle Safaricom's callback, recover from callbacks that never arrive, and report what is
 still unreconciled.
